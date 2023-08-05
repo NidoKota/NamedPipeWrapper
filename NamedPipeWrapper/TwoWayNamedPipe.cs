@@ -53,9 +53,11 @@ namespace NamedPipeWrapper
         }
 
         public event Action<string> OnRead;
+        public Task OnDisposeTask => _onDisposeTaskSource.Task;
 
         private StreamReader _reader;
         private NamedPipeServerStream _pipeServer;
+        private readonly TaskCompletionSource<int> _onDisposeTaskSource = new TaskCompletionSource<int>();
 
         private async Task ReadServerStart(string pipeName)
         {
@@ -75,6 +77,8 @@ namespace NamedPipeWrapper
                     var message = await _reader.ReadLineAsync();
                     if (_pipeServer.IsConnected) OnRead?.Invoke(message);
                 }
+                
+                _onDisposeTaskSource.SetResult(0);
             }
         }
 
@@ -91,7 +95,7 @@ namespace NamedPipeWrapper
             }
             catch (TimeoutException ex)
             {
-                Console.WriteLine($"TimeOut: {ex.Message}");
+                Utility.DebugLog($"TimeOut: {ex.Message}");
                 Dispose();
             }
         }
@@ -100,7 +104,7 @@ namespace NamedPipeWrapper
         {
             await _writer.WriteLineAsync(message);
             await _writer.FlushAsync();
-            Console.WriteLine($"Send: {message} {DateTime.Now}");
+            Utility.DebugLog($"Send: {message} {DateTime.Now}");
         }
 
         public void Dispose()
