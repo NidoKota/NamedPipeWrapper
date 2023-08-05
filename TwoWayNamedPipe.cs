@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Threading;
 
 namespace NamedPipeWrapper
 {
@@ -51,7 +52,7 @@ namespace NamedPipeWrapper
         }
 
         public event Action<string> OnRead;
-        public Task OnDisposeTask => _onDisposeTaskSource.Task;
+        public async Task OnDisposeTask() => await _onDisposeTaskSource.Task;
 
         private StreamReader _reader;
         private NamedPipeServerStream _pipeServer;
