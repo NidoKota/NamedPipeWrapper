@@ -30,11 +30,11 @@ namespace NamedPipeWrapper
         {
             if (_childProcess == null)
             {
-                await ReadServerStart("TwoWayNamedPipeFirst");
+                await ReadServerStart("TwoWayNamedPipeFirst", _currentProcess);
             }
             else
             {
-                await WriteClientStart("TwoWayNamedPipeFirst");
+                await WriteClientStart("TwoWayNamedPipeFirst", _childProcess);
             }
         }
 
@@ -42,11 +42,11 @@ namespace NamedPipeWrapper
         {
             if (_childProcess == null)
             {
-                await WriteClientStart("TwoWayNamedPipeSecond");
+                await WriteClientStart("TwoWayNamedPipeSecond", _currentProcess);
             }
             else
             {
-                await ReadServerStart("TwoWayNamedPipeSecond");
+                await ReadServerStart("TwoWayNamedPipeSecond", _childProcess);
             }
         }
 
@@ -57,9 +57,9 @@ namespace NamedPipeWrapper
         private NamedPipeServerStream _pipeServer;
         private readonly TaskCompletionSource<int> _onDisposeTaskSource = new TaskCompletionSource<int>();
 
-        private async Task ReadServerStart(string pipeName)
+        private async Task ReadServerStart(string pipeName, Process process)
         {
-            _pipeServer = new NamedPipeServerStream($"{pipeName}{_childProcess.Id}");
+            _pipeServer = new NamedPipeServerStream($"{pipeName}{process.Id}");
 
             await _pipeServer.WaitForConnectionAsync();
 
@@ -83,9 +83,9 @@ namespace NamedPipeWrapper
         private StreamWriter _writer;
         private NamedPipeClientStream _pipeClient;
 
-        private async Task WriteClientStart(string pipeName)
+        private async Task WriteClientStart(string pipeName, Process process)
         {
-            _pipeClient = new NamedPipeClientStream($"{pipeName}{_childProcess.Id}");
+            _pipeClient = new NamedPipeClientStream($"{pipeName}{process.Id}");
             try
             {
                 await _pipeClient.ConnectAsync(5000);
