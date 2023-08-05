@@ -18,11 +18,9 @@ namespace NamedPipeWrapper
         {
             _childProcess = childProcess;
             _currentProcess = Process.GetCurrentProcess();
-
-            Connect();
         }
 
-        private async void Connect()
+        public async Task Connect()
         {
             await FirstConnect();
             await SecondConnect();
