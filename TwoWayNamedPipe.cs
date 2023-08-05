@@ -25,6 +25,8 @@ namespace NamedPipeWrapper
         {
             await FirstConnect();
             await SecondConnect();
+
+            IsValid = true;
         }
 
         private async Task FirstConnect()
@@ -52,11 +54,12 @@ namespace NamedPipeWrapper
         }
 
         public event Action<string> OnRead;
-        public async Task OnDisposeTask() => await _onDisposeTaskSource.Task;
+        public event Action OnDisconnect;
+        public bool IsValid { get; private set; }
 
         private StreamReader _reader;
         private NamedPipeServerStream _pipeServer;
-        private readonly TaskCompletionSource<int> _onDisposeTaskSource = new TaskCompletionSource<int>();
+        private CancellationTokenSource _pipeServerCancelSource = new CancellationTokenSource();
 
         private async Task ReadServerStart(string pipeName, Process process)
         {
@@ -71,13 +74,22 @@ namespace NamedPipeWrapper
 
             async Task Monitoring()
             {
-                while (_pipeServer.IsConnected)
+                try
                 {
-                    var message = await _reader.ReadLineAsync();
-                    if (_pipeServer.IsConnected) OnRead?.Invoke(message);
+                    while (true)
+                    {
+                        var message = await _reader.ReadLineAsync().WithCancellation(_pipeServerCancelSource.Token);
+                        _pipeServerCancelSource = new CancellationTokenSource();
+                        
+                        if (_pipeServer.IsConnected) OnRead?.Invoke(message);
+                        else
+                        {
+                            OnDisconnectInternal();
+                            break;
+                        }
+                    }
                 }
-                
-                _onDisposeTaskSource.SetResult(0);
+                catch (OperationCanceledException) { }
             }
         }
 
@@ -101,13 +113,24 @@ namespace NamedPipeWrapper
 
         public async Task Write(string message)
         {
+            if (!IsValid) return;
+            
             await _writer.WriteLineAsync(message);
             await _writer.FlushAsync();
             Utility.DebugLog($"Send: {message} {DateTime.Now}");
         }
+        
+        private void OnDisconnectInternal()
+        {
+            IsValid = false;
+            OnDisconnect?.Invoke();
+        }
 
         public void Dispose()
         {
+            IsValid = false;
+            _pipeServerCancelSource.Cancel();
+            
             _childProcess?.Dispose();
             _currentProcess?.Dispose();
             _reader?.Dispose();
