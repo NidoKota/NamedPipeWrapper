@@ -1,0 +1,13 @@
+﻿# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/contentModel.xml
+/projectSettingsUpdater.xml
+/modules.xml
+/.idea.NamedPipeWrapper.iml
+# Datasource local storage ignored files
+/../../../../../../../../../../../../../:\Users\nidok\Desktop\Unity\Fireworks\GoProCUI\GoProCUI\NamedPipeWrapper\NamedPipeWrapper\.idea\.idea.NamedPipeWrapper\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
