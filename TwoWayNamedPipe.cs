@@ -115,12 +115,8 @@ namespace NamedPipeWrapper
         {
             if (!IsValid) return;
 
-            try
-            {
-                await _writer.WriteLineAsync(message).WithCancellation(token);
-                await _writer.FlushAsync().WithCancellation(token);
-            }
-            catch (OperationCanceledException) { }
+            await _writer.WriteLineAsync(message).WithCancellation(token);
+            await _writer.FlushAsync().WithCancellation(token);
 
             Utility.DebugLog($"Send: {message} {DateTime.Now}");
         }
