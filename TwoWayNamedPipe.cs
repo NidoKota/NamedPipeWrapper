@@ -118,7 +118,7 @@ namespace NamedPipeWrapper
             await _writer.WriteLineAsync(message).WithCancellation(token);
             await _writer.FlushAsync().WithCancellation(token);
 
-            Utility.DebugLog($"Send: {message} {DateTime.Now}");
+            // Utility.DebugLog($"Send: {message} {DateTime.Now}");
         }
         
         private void OnDisconnectInternal()
