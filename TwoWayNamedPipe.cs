@@ -119,7 +119,7 @@ namespace NamedPipeWrapper
         {
             if (!IsValid) return;
 
-            if (_debug) Utility.DebugLog($"Send : {message} {DateTime.Now}");
+            if (_debug) Utility.DebugLog($"Send : {DateTime.Now} {message}");
             
             await _writer.WriteLineAsync(message).WithCancellation(token);
             await _writer.FlushAsync().WithCancellation(token);
@@ -127,7 +127,7 @@ namespace NamedPipeWrapper
         
         private void OnReadInternal(string message)
         {
-            if (_debug) Utility.DebugLog($"OnRead : {message} {DateTime.Now}");
+            if (_debug) Utility.DebugLog($"OnRead : {DateTime.Now} {message}");
             OnRead?.Invoke(message);
         }
         
