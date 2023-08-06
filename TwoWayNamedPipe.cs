@@ -14,17 +14,21 @@ namespace NamedPipeWrapper
     {
         private readonly Process _childProcess;
         private readonly Process _currentProcess;
+        private readonly bool _debug;
 
-        public TwoWayNamedPipe(Process childProcess = null)
+        public TwoWayNamedPipe(Process childProcess = null, bool debug = false)
         {
             _childProcess = childProcess;
             _currentProcess = Process.GetCurrentProcess();
+            _debug = debug;
         }
 
         public async Task Connect()
         {
             await FirstConnect();
             await SecondConnect();
+
+            if (_debug) Utility.DebugLog($"Connected : {DateTime.Now}");
 
             IsValid = true;
         }
@@ -80,8 +84,8 @@ namespace NamedPipeWrapper
                     {
                         var message = await _reader.ReadLineAsync().WithCancellation(_pipeServerCancelSource.Token);
                         _pipeServerCancelSource = new CancellationTokenSource();
-                        
-                        if (_pipeServer.IsConnected) OnRead?.Invoke(message);
+
+                        if (_pipeServer.IsConnected) OnReadInternal(message);
                         else
                         {
                             OnDisconnectInternal();
@@ -111,24 +115,34 @@ namespace NamedPipeWrapper
             }
         }
 
-        public async Task Write(string message, CancellationToken token, bool debug = false)
+        public async Task Write(string message, CancellationToken token)
         {
             if (!IsValid) return;
 
+            if (_debug) Utility.DebugLog($"Send : {message} {DateTime.Now}");
+            
             await _writer.WriteLineAsync(message).WithCancellation(token);
             await _writer.FlushAsync().WithCancellation(token);
-
-            if (debug) Utility.DebugLog($"Send: {message} {DateTime.Now}");
+        }
+        
+        private void OnReadInternal(string message)
+        {
+            if (_debug) Utility.DebugLog($"OnRead : {message} {DateTime.Now}");
+            OnRead?.Invoke(message);
         }
         
         private void OnDisconnectInternal()
         {
+            if (_debug) Utility.DebugLog($"OnDisconnect : {DateTime.Now}");
+            
             IsValid = false;
             OnDisconnect?.Invoke();
         }
 
         public void Dispose()
         {
+            if (_debug) Utility.DebugLog($"Dispose : {DateTime.Now}");
+            
             IsValid = false;
             _pipeServerCancelSource.Cancel();
             
