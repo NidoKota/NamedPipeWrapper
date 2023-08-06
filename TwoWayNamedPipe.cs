@@ -111,14 +111,14 @@ namespace NamedPipeWrapper
             }
         }
 
-        public async Task Write(string message, CancellationToken token)
+        public async Task Write(string message, CancellationToken token, bool debug = false)
         {
             if (!IsValid) return;
 
             await _writer.WriteLineAsync(message).WithCancellation(token);
             await _writer.FlushAsync().WithCancellation(token);
 
-            // Utility.DebugLog($"Send: {message} {DateTime.Now}");
+            if (debug) Utility.DebugLog($"Send: {message} {DateTime.Now}");
         }
         
         private void OnDisconnectInternal()
