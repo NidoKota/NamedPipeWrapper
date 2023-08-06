@@ -104,19 +104,24 @@ namespace NamedPipeWrapper
                 await _pipeClient.ConnectAsync(5000);
                 _writer = new StreamWriter(_pipeClient);
             }
-            catch (TimeoutException ex)
+            catch (TimeoutException)
             {
-                Utility.DebugLog($"TimeOut: {ex.Message}");
+                Utility.DebugLog($"TimeOut");
                 Dispose();
             }
         }
 
-        public async Task Write(string message)
+        public async Task Write(string message, CancellationToken token)
         {
             if (!IsValid) return;
-            
-            await _writer.WriteLineAsync(message);
-            await _writer.FlushAsync();
+
+            try
+            {
+                await _writer.WriteLineAsync(message).WithCancellation(token);
+                await _writer.FlushAsync().WithCancellation(token);
+            }
+            catch (OperationCanceledException) { }
+
             Utility.DebugLog($"Send: {message} {DateTime.Now}");
         }
         

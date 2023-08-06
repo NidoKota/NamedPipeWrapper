@@ -28,5 +28,16 @@ namespace NamedPipeWrapper
                     TaskContinuationOptions.ExecuteSynchronously,
                     TaskScheduler.Default);
         }
+        
+        public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
+        {
+            return task.IsCompleted
+                ? task
+                : task.ContinueWith(
+                    completedTask => completedTask.GetAwaiter().GetResult(),
+                    cancellationToken,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+        }
     }
 }
